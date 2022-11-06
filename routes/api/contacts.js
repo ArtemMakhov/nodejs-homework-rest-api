@@ -1,9 +1,12 @@
 const express = require('express')
 
+const { validationBody } = require("../../middlewares/validationMiddleware");
 const {
-  addContactValidation,
-  updateContactValidation
-} = require('../../middlewares/validationMiddleware');
+  schemaPostContact,
+  schemaPutContact,
+  // schemaPatchContact,
+} = require("../../schemas/contactsSchemas");
+
 const {
   listContacts,
   getContactById,
@@ -26,7 +29,7 @@ router.get('/:contactId', async (req, res, next) => {
   res.status(200).json(contact);
 })
 
-router.post('/', addContactValidation,async (req, res, next) => {
+router.post('/', validationBody(schemaPostContact),async (req, res, next) => {
   const newContactData = req.body;
   const newContact = await addContact(newContactData);
 
@@ -41,7 +44,7 @@ router.delete('/:contactId', async (req, res, next) => {
   res.status(200).json({ message: "Contact deleted" });
 })
 
-router.put('/:contactId',updateContactValidation, async (req, res, next) => {
+router.put('/:contactId',validationBody(schemaPutContact), async (req, res, next) => {
   const updatedContact = await updateContact(req.params.contactId, req.body);
   if (!updatedContact) return res.status(404).json({ message: "Not found" });
 
