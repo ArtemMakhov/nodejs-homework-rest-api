@@ -1,54 +1,33 @@
-const express = require('express')
-
+const express = require('express');
+const { asyncWrapper } = require('../../helpers/asyncWrapper');
 const { validationBody } = require("../../middlewares/validationMiddleware");
+const {
+  getContactsController,
+  getContactByIdController,
+  addContactController,
+  deleteContactController,
+  updateContactController,
+  changeFavoriteController
+} = require('../../controllers/contactsController');
 const {
   schemaPostContact,
   schemaPutContact,
-  // schemaPatchContact,
+  schemaPatchContact,
 } = require("../../schemas/contactsSchemas");
 
-const {
-  listContacts,
-  getContactById,
-  addContact,
-  removeContact,
-  updateContact
-} = require('../../models/contacts');
+const router = express.Router();
 
-const router = express.Router()
 
-router.get('/', async (req, res, next) => {
-  const contacts = await listContacts();
-  res.status(200).json(contacts)
-})
+router.get('/', asyncWrapper(getContactsController));
 
-router.get('/:contactId', async (req, res, next) => {
-  const contact = await getContactById(req.params.contactId);
+router.get('/:contactId', asyncWrapper(getContactByIdController));
 
-  if (!contact) return res.status(404).json({ message: "Not found" });
-  res.status(200).json(contact);
-})
+router.post('/', validationBody(schemaPostContact), asyncWrapper(addContactController));
 
-router.post('/', validationBody(schemaPostContact),async (req, res, next) => {
-  const newContactData = req.body;
-  const newContact = await addContact(newContactData);
+router.delete('/:contactId', asyncWrapper(deleteContactController));
 
-  res.status(201).json(newContact);
-  
-})
+router.put('/:contactId', validationBody(schemaPutContact), asyncWrapper(updateContactController));
 
-router.delete('/:contactId', async (req, res, next) => {
-  const contactRemoved = await removeContact(req.params.contactId);
-  if (!contactRemoved) return res.status(404).json({ message: "Not found" });
-
-  res.status(200).json({ message: "Contact deleted" });
-})
-
-router.put('/:contactId',validationBody(schemaPutContact), async (req, res, next) => {
-  const updatedContact = await updateContact(req.params.contactId, req.body);
-  if (!updatedContact) return res.status(404).json({ message: "Not found" });
-
-  res.status(200).json(updatedContact);
-})
+router.patch('/:contactId/favorite', validationBody(schemaPatchContact), asyncWrapper(changeFavoriteController));
 
 module.exports = router
