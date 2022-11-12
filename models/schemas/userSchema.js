@@ -23,6 +23,12 @@ const userSchema = new Schema(
             type: String,
             default: null,
         },
+        contacts: [
+            {
+                type: Schema.Types.ObjectId,
+                ref:"contacts"
+            },
+        ],
     }
 );
 

@@ -33,6 +33,7 @@ async function register(req, res, next) {
 }
 
 async function login(req, res, next) {
+  // const authHeader = req.headers.authorization;
   const { email, password } = req.body;
   const user = await User.findOne({ email });
   if (!user) {
@@ -42,15 +43,25 @@ async function login(req, res, next) {
   if (!isPasswordTheSame) {
     throw new Unauthorized("wrong password");
   }
-  const token = jwt.sign({_id: user._id},JWT_SECRET,{expiresIn: "15m"});
+  const token = jwt.sign({ _id: user._id }, JWT_SECRET, { expiresIn: "60m" });
+  user.token = token;
+  await User.findByIdAndUpdate(user._id, user);
   return res.json({
     data: {
       token,
     },
   });
 }
+async function logout(req, res, next) {
+  const { user } = req;
+  user.token = null;
+  await User.findByIdAndUpdate(user._id, user);
+
+ return res.json({})
+}
 
 module.exports = {
   register,
   login,
+  logout,
 };
