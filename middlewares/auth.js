@@ -16,10 +16,10 @@ async function auth(req, res, next) {
 
             const user = await User.findById(verifiedToken._id);
             if (!user) {
-                next(new Unauthorized("No user with such id"))
+                next(new Unauthorized("Not authorized"))
             }
              if (!user.token) {
-                next(new Unauthorized("Token is invalide"))
+                next(new Unauthorized("Not authorized. Token is invalide!"))
             }
             console.log("user:", user)
             req.user = user;

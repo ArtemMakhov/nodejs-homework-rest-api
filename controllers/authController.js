@@ -6,62 +6,65 @@ require("dotenv").config();
 
 const { JWT_SECRET } = process.env
 
-
-
-async function register(req, res, next) {
+async function signup(req, res, next) {
   const { email, password } = req.body;
-  
-  // const salt = await bcrypt.genSalt();
-  // const hashedPassword = await bcrypt.hash(password, salt);
- 
   const user = new User({ email, password });
-  
-  try {
-    await user.save();
+ try {
+   const newUser = await user.save();
+   const { subscription } = newUser;
+   return res.status(201).json({ user: {email,subscription} })
   } catch (error) {
     if (error.message.includes("duplicate key error collection")) {
       throw new Conflict("Email in use")
     }
     throw error;
   }
-
-  return res.status(201).json({
-    data: {
-      user,
-    }
-  })
 }
 
 async function login(req, res, next) {
-  // const authHeader = req.headers.authorization;
   const { email, password } = req.body;
+
   const user = await User.findOne({ email });
+
   if (!user) {
     throw new Unauthorized("Email or password is wrong")
   }
+  
   const isPasswordTheSame = await bcrypt.compare(password, user.password);
   if (!isPasswordTheSame) {
     throw new Unauthorized("wrong password");
   }
-  const token = jwt.sign({ _id: user._id }, JWT_SECRET, { expiresIn: "60m" });
+  
+  const token = jwt.sign({ _id: user._id }, JWT_SECRET, { expiresIn: "15m" });
   user.token = token;
   await User.findByIdAndUpdate(user._id, user);
-  return res.json({
+  return res.status(200).json({
     data: {
       token,
+      user: {email: user.email, subscription: user.subscription },
     },
   });
 }
+
 async function logout(req, res, next) {
   const { user } = req;
   user.token = null;
+  if (!user) {
+    throw new Unauthorized("Not authorized");
+  }
   await User.findByIdAndUpdate(user._id, user);
 
- return res.json({})
+  return res.status(204).json("No content");
+}
+
+const getCurrent = async (req, res, next) => {
+  const { email, subscription } = req.user;
+  res.json({ email, subscription });
 }
 
 module.exports = {
-  register,
+  signup,
   login,
   logout,
+  getCurrent,
 };
