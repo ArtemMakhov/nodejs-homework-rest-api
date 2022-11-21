@@ -2,7 +2,9 @@ const { User } = require("../models/schemas/userSchema");
 const { Conflict,Unauthorized} = require("http-errors");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const gravatar = require("gravatar");
 require("dotenv").config();
+
 
 const { JWT_SECRET } = process.env
 
@@ -18,6 +20,7 @@ async function signup(req, res, next) {
     email,
     subscription,
     password: hashPassword,
+    avatarURL: gravatar.url(email, {protocol: "https"}),
   });
   res.status(201).json({
     data: {
