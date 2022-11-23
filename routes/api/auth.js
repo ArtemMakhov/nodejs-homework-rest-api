@@ -1,6 +1,5 @@
 const express = require('express');
 const authController = require('../../controllers/authController');
-const userController = require('../../controllers/userController');
 const { asyncWrapper } = require('../../helpers/asyncWrapper');
 const { validationBody } = require('../../middlewares/validationMiddleware');
 const { upload } = require('../../middlewares/upload');
@@ -15,8 +14,9 @@ router.post('/signup',validationBody(schemaAuthValidation), asyncWrapper(authCon
 router.post('/login', asyncWrapper(authController.login));
 router.post('/logout', auth, asyncWrapper(authController.logout));
 
-router.patch('subscription', auth, asyncWrapper(userController.changeSubscriptionController));
-router.patch('avatars', auth, upload.single("avatar"), asyncWrapper(userController.changeAvatarController));
+router.patch('/avatar',auth,upload.single("avatar"), asyncWrapper(authController.changeAvatarUrl));
+
+
 
 
 module.exports = router
