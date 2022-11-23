@@ -91,6 +91,7 @@ async function changeAvatarUrl(req, res, next) {
       avatarURL: avatarUrl,
     }
     );
+
     return res.status(201).json({avatarUrl});
  } catch (error) {
    next(error);
