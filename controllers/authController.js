@@ -86,7 +86,7 @@ async function changeAvatarUrl(req, res, next) {
     const newPath = path.join(__dirname,'../public/avatars', req.file.filename);
     await fs.rename(tempUpload, newPath);   
  
-    const avatarUrl = '/public/avatars/' + req.file.filename;
+    const avatarUrl = '/avatars/' + req.file.filename;
     await User.findByIdAndUpdate(req.user._id, {
       avatarURL: avatarUrl,
     }
