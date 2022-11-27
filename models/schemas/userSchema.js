@@ -11,7 +11,7 @@ const userSchema = new Schema(
             type: String,
             required: [true, 'Email is required'],
             unique: true,
-            index:true,
+            index: true,
         },
         subscription: {
             type: String,
@@ -24,7 +24,15 @@ const userSchema = new Schema(
         },
         avatarURL: {
             type: String,
-        }
+        },
+        verify: {
+            type: Boolean,
+            default: false,
+        },
+        verificationToken: {
+            type: String,
+            required: [true, 'Verify token is required'],
+        },
 
     }
 );

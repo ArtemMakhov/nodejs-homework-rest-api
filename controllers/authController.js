@@ -4,12 +4,21 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const gravatar = require("gravatar");
 const Jimp = require("jimp");
+const {nanoid} = require("nanoid");
 require("dotenv").config();
 
 const fs = require("fs").promises;
 const path = require("path");
 
+const  {sendRegisterEmail} = require("../helpers/mailService");
+
 const { JWT_SECRET } = process.env
+
+async function verifyEmail(req, res, next) {
+  res.json({
+    ok: true,
+  });
+}
 
 async function signup(req, res, next) {
   const { email, password, subscription } = req.body;
@@ -18,13 +27,16 @@ async function signup(req, res, next) {
     throw new Conflict("Email in use");
   }
   const hashPassword = bcrypt.hashSync(password, bcrypt.genSaltSync(10));
-  
+  const verificationToken = nanoid();
+
   const result = await User.create({
     email,
     subscription,
     password: hashPassword,
-    avatarURL: gravatar.url(email, {protocol: "https"}),
+    avatarURL: gravatar.url(email, { protocol: "https" }),
+    verificationToken,
   });
+  await sendRegisterEmail({ email, verificationToken: verificationToken });
   res.status(201).json({
     data: {
       user: {
