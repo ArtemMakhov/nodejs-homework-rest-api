@@ -12,11 +12,9 @@ const router = express.Router();
 router.get('/current', auth, asyncWrapper(authController.getCurrent));
 router.post('/signup',validationBody(schemaAuthValidation), asyncWrapper(authController.signup));
 router.post('/login', asyncWrapper(authController.login));
-// router.get('/verify', auth, asyncWrapper(authController.logout));
+router.get('/verify/:verificationToken', asyncWrapper(authController.verifyEmail));
 router.post('/logout', auth, asyncWrapper(authController.logout));
-
 router.patch('/avatar',auth,upload.single("avatar"), asyncWrapper(authController.changeAvatarUrl));
-
 
 
 

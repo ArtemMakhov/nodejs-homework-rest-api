@@ -10,17 +10,18 @@ const sendRegisterEmail = async({email,verificationToken}) => {
         }
     });
 
-    const url = `/users/verify/${verificationToken}`;
+    const url = `http://localhost:3000/api/users/verify/${verificationToken}`;
 
     const emailOptions = {
         from: "info@contact.com",
         to: email,
         subject: "Please verify your email",
-        html: `<h1> Please open this link: ${url}</h1>`,
-        text: `Please open this link: ${url}`
+        html: `<h1> Authorization </h1> 
+        <p>For authorization click on the link: <a href=${url}>${url}</a></p>`,
+        text: `Open this link: ${url} to verify your email.`
     }
     const responce =  await transport.sendMail(emailOptions);
-    console.log("Email sent",responce)
+    console.log("Email sent", responce)
 }
 
 module.exports = {

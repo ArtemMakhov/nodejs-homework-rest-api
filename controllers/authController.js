@@ -1,5 +1,5 @@
 const { User } = require("../models/schemas/userSchema");
-const { Conflict,Unauthorized} = require("http-errors");
+const { Conflict,Unauthorized,NotFound} = require("http-errors");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const gravatar = require("gravatar");
@@ -15,9 +15,25 @@ const  {sendRegisterEmail} = require("../helpers/mailService");
 const { JWT_SECRET } = process.env
 
 async function verifyEmail(req, res, next) {
-  res.json({
-    ok: true,
+  const { verificationToken } = req.params;
+
+  const user = await User.findOne({
+    verificationToken: verificationToken,
   });
+  if (!user) {
+    throw new NotFound("User not found")
+  }
+
+  if (!user.verify) {
+   await User.findByIdAndUpdate(user._id, {
+      verify: true,
+    });
+    return res.status(200).json({ message: "Verification successful" });
+  } 
+  
+  if (user.verify) {
+    return res.status(400).json({ message: "Verification has already been passed"})
+  }
 }
 
 async function signup(req, res, next) {
@@ -55,6 +71,10 @@ async function login(req, res, next) {
 
   if (!user) {
     throw new Unauthorized("Email or password is wrong")
+  }
+  
+  if (!user.verify) {
+    throw new Unauthorized("Email is not verified")
   }
   
   const isPasswordTheSame = await bcrypt.compare(password, user.password);
@@ -116,4 +136,5 @@ module.exports = {
   logout,
   getCurrent,
   changeAvatarUrl,
+  verifyEmail,
 };
