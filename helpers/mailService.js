@@ -1,6 +1,6 @@
 const nodemailer = require('nodemailer');
 
-const sendRegisterEmail = async({email,verificationToken}) => {
+const sendRegisterEmail = async ( email, verificationToken ) => {
     const transport = nodemailer.createTransport({
         host: "smtp.mailtrap.io",
         port: 2525,
@@ -20,8 +20,8 @@ const sendRegisterEmail = async({email,verificationToken}) => {
         <p>For authorization click on the link: <a href=${url}>${url}</a></p>`,
         text: `Open this link: ${url} to verify your email.`
     }
-    const responce =  await transport.sendMail(emailOptions);
-    console.log("Email sent", responce)
+    const info = await transport.sendMail(emailOptions);
+    console.log("Email sent", info);
 }
 
 module.exports = {

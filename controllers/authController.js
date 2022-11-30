@@ -1,5 +1,5 @@
 const { User } = require("../models/schemas/userSchema");
-const { Conflict,Unauthorized,NotFound} = require("http-errors");
+const { Conflict,Unauthorized,NotFound,BadRequest} = require("http-errors");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const gravatar = require("gravatar");
@@ -11,6 +11,7 @@ const fs = require("fs").promises;
 const path = require("path");
 
 const  {sendRegisterEmail} = require("../helpers/mailService");
+
 
 const { JWT_SECRET } = process.env
 
@@ -36,6 +37,8 @@ async function verifyEmail(req, res, next) {
   }
 }
 
+
+
 async function signup(req, res, next) {
   const { email, password, subscription } = req.body;
   const user = await User.findOne({ email });
@@ -52,7 +55,9 @@ async function signup(req, res, next) {
     avatarURL: gravatar.url(email, { protocol: "https" }),
     verificationToken,
   });
-  await sendRegisterEmail({ email, verificationToken: verificationToken });
+   
+  await sendRegisterEmail(result.email, verificationToken);
+ 
   res.status(201).json({
     data: {
       user: {
@@ -62,6 +67,20 @@ async function signup(req, res, next) {
     }
   });
 
+}
+
+async function resendingEmail(req, res, next) {
+  const { email } = req.body;
+  
+  const user = await User.findOne({email});
+  
+  if (user.verify === true) {
+    throw new BadRequest("Verification has already been passed ")   
+  }
+  
+ await sendRegisterEmail(user.email, user.verificationToken);
+
+  res.status(200).json({ message: "Verification email sent" });
 }
 
 async function login(req, res, next) {
@@ -137,4 +156,5 @@ module.exports = {
   getCurrent,
   changeAvatarUrl,
   verifyEmail,
+  resendingEmail,
 };

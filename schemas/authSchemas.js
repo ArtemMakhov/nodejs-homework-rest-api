@@ -5,6 +5,11 @@ const schemaAuthValidation = Joi.object({
   email: Joi.string().email().required(),
 });
 
+const schemaEmailValidation = Joi.object({
+  email: Joi.string().email().required(),
+})
+
 module.exports = {
-    schemaAuthValidation,
+  schemaAuthValidation,
+  schemaEmailValidation,
 }
