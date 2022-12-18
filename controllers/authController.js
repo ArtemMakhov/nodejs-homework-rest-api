@@ -1,15 +1,43 @@
 const { User } = require("../models/schemas/userSchema");
-const { Conflict,Unauthorized} = require("http-errors");
+const { Conflict,Unauthorized,NotFound,BadRequest} = require("http-errors");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const gravatar = require("gravatar");
 const Jimp = require("jimp");
+const {nanoid} = require("nanoid");
 require("dotenv").config();
 
 const fs = require("fs").promises;
 const path = require("path");
 
+const  {sendRegisterEmail} = require("../helpers/mailService");
+
+
 const { JWT_SECRET } = process.env
+
+async function verifyEmail(req, res, next) {
+  const { verificationToken } = req.params;
+
+  const user = await User.findOne({
+    verificationToken: verificationToken,
+  });
+  if (!user) {
+    throw new NotFound("User not found")
+  }
+
+  if (!user.verify) {
+   await User.findByIdAndUpdate(user._id, {
+      verify: true,
+    });
+    return res.status(200).json({ message: "Verification successful" });
+  } 
+  
+  if (user.verify) {
+    return res.status(400).json({ message: "Verification has already been passed"})
+  }
+}
+
+
 
 async function signup(req, res, next) {
   const { email, password, subscription } = req.body;
@@ -18,13 +46,18 @@ async function signup(req, res, next) {
     throw new Conflict("Email in use");
   }
   const hashPassword = bcrypt.hashSync(password, bcrypt.genSaltSync(10));
-  
+  const verificationToken = nanoid();
+
   const result = await User.create({
     email,
     subscription,
     password: hashPassword,
-    avatarURL: gravatar.url(email, {protocol: "https"}),
+    avatarURL: gravatar.url(email, { protocol: "https" }),
+    verificationToken,
   });
+   
+  await sendRegisterEmail(result.email, verificationToken);
+ 
   res.status(201).json({
     data: {
       user: {
@@ -36,6 +69,20 @@ async function signup(req, res, next) {
 
 }
 
+async function resendingEmail(req, res, next) {
+  const { email } = req.body;
+  
+  const user = await User.findOne({email});
+  
+  if (user.verify === true) {
+    throw new BadRequest("Verification has already been passed ")   
+  }
+  
+ await sendRegisterEmail(user.email, user.verificationToken);
+
+  res.status(200).json({ message: "Verification email sent" });
+}
+
 async function login(req, res, next) {
   const { email, password } = req.body;
 
@@ -43,6 +90,10 @@ async function login(req, res, next) {
 
   if (!user) {
     throw new Unauthorized("Email or password is wrong")
+  }
+  
+  if (!user.verify) {
+    throw new Unauthorized("Email is not verified")
   }
   
   const isPasswordTheSame = await bcrypt.compare(password, user.password);
@@ -104,4 +155,6 @@ module.exports = {
   logout,
   getCurrent,
   changeAvatarUrl,
+  verifyEmail,
+  resendingEmail,
 };
